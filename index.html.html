@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEG × PGHS School Rally 🇩🇪🇺🇸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0d0d0d;
+    --white: #f5f0e8;
+    --cream: #faf6ee;
+    --gold: #c8a84b;
+    --gold-light: #e8c96a;
+    --red-de: #cc0000;
+    --blue-us: #3c3b6e;
+    --green: #2d6a4f;
+    --orange: #e07b39;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--black); color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(200,168,75,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 80%, rgba(60,59,110,0.12) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+  .page { position: relative; z-index: 1; }
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* SHARED */
+  .gapp-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(200,168,75,0.12); border: 1px solid rgba(200,168,75,0.3);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--gold); text-transform: uppercase;
+  }
+  .btn-primary {
+    background: var(--gold); color: var(--black);
+    border: none; border-radius: 12px; padding: 16px 40px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.04em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(200,168,75,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,168,75,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+  .gapp-footer {
+    padding: 16px 24px; border-top: 1px solid rgba(245,240,232,0.07);
+    font-size: 11px; color: rgba(245,240,232,0.35);
+    text-align: center; letter-spacing: 0.04em;
+  }
+  .gapp-footer strong { color: var(--gold); }
+
+  /* ── WELCOME ── */
+  #screen-welcome {
+    align-items: center; justify-content: center;
+    padding: 32px 20px; text-align: center; gap: 20px;
+  }
+  .flags { font-size: 44px; letter-spacing: 8px; }
+  .welcome-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(34px,8vw,68px); font-weight: 900; line-height: 0.95;
+  }
+  .welcome-title em { color: var(--gold); font-style: normal; display: block; }
+  .welcome-subtitle {
+    font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,240,232,0.5); font-weight: 500;
+  }
+  .school-pills { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .pill { padding: 7px 16px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .pill-de { background: var(--red-de); color: #fff; }
+  .pill-us { background: var(--blue-us); color: #fff; }
+
+  /* RULES ACCORDION */
+  .rules-section { width: 100%; max-width: 500px; }
+  .rules-section h3 {
+    font-family: 'Playfair Display', serif; font-size: 15px;
+    color: var(--gold); margin-bottom: 12px; text-align: left;
+  }
+  .rule-block {
+    background: rgba(245,240,232,0.04); border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 12px; margin-bottom: 8px; overflow: hidden;
+  }
+  .rule-block-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 16px; cursor: pointer; user-select: none;
+    font-size: 13px; font-weight: 600;
+    transition: background 0.2s;
+  }
+  .rule-block-header:hover { background: rgba(245,240,232,0.04); }
+  .rule-block-header .ico { font-size: 16px; margin-right: 8px; }
+  .rule-block-header .chevron { font-size: 11px; color: rgba(245,240,232,0.4); transition: transform 0.2s; }
+  .rule-block-header.open .chevron { transform: rotate(180deg); }
+  .rule-block-body {
+    display: none; padding: 0 16px 14px;
+    font-size: 13px; line-height: 1.7; color: rgba(245,240,232,0.75);
+  }
+  .rule-block-body.open { display: block; }
+  .rule-block-body ul { list-style: none; display: flex; flex-direction: column; gap: 5px; padding-left: 4px; }
+  .rule-block-body li::before { content: "→ "; color: var(--gold); font-weight: 700; }
+  .rule-example {
+    background: rgba(200,168,75,0.1); border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0; padding: 8px 12px; margin-top: 8px;
+    font-size: 12px; font-style: italic; color: var(--gold-light);
+  }
+
+  /* ── SETUP ── */
+  #screen-setup { padding: 32px 20px; gap: 20px; align-items: center; }
+  .setup-header { text-align: center; }
+  .setup-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(22px,5vw,38px); font-weight: 700; }
+  .setup-header p { font-size: 13px; color: rgba(245,240,232,0.55); margin-top: 6px; }
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; width: 100%; max-width: 900px; }
+  .team-card {
+    background: rgba(245,240,232,0.04); border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 14px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 9px; transition: border-color 0.2s;
+  }
+  .team-card:focus-within { border-color: var(--gold); }
+  .team-card-header { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); }
+  .team-num { width: 24px; height: 24px; border-radius: 50%; background: var(--gold); color: var(--black); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .team-input-row { display: flex; gap: 6px; align-items: center; }
+  .team-input-row input {
+    flex: 1; background: rgba(245,240,232,0.06); border: 1px solid rgba(245,240,232,0.15);
+    border-radius: 8px; padding: 9px 11px; color: var(--white);
+    font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  .team-input-row input:focus { border-color: var(--gold); }
+  .team-input-row input::placeholder { color: rgba(245,240,232,0.3); }
+  .plus-sign { font-size: 18px; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+  .team-name-preview { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold-light); min-height: 16px; font-style: italic; }
+  .team-input-hint { font-size: 11px; color: rgba(245,240,232,0.35); }
+
+  /* ── SELECT ── */
+  #screen-select { padding: 40px 20px; align-items: center; justify-content: center; gap: 20px; }
+  #screen-select h2 { font-family: 'Playfair Display', serif; font-size: clamp(22px,5vw,38px); font-weight: 700; text-align: center; }
+  #screen-select p { font-size: 13px; color: rgba(245,240,232,0.5); text-align: center; }
+  .team-select-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 10px; width: 100%; max-width: 580px; }
+  .team-select-btn {
+    background: rgba(245,240,232,0.05); border: 1px solid rgba(245,240,232,0.12);
+    border-radius: 12px; padding: 15px 12px; color: var(--white);
+    font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.1s; text-align: center; line-height: 1.5;
+  }
+  .team-select-btn:hover { background: rgba(200,168,75,0.1); border-color: var(--gold); transform: scale(1.03); }
+  .team-select-btn .tn { font-size: 10px; color: rgba(245,240,232,0.4); font-style: italic; margin-top: 4px; }
+
+  /* ── RALLY ── */
+  #screen-rally { padding: 0; flex-direction: column; }
+  .rally-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; background: rgba(13,13,13,0.92);
+    border-bottom: 1px solid rgba(245,240,232,0.08);
+    position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px);
+  }
+  .rally-topbar-left .label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,240,232,0.4); font-weight: 600; }
+  .rally-topbar-left .team-display { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--gold); font-weight: 700; }
+  .timer-box {
+    background: rgba(200,168,75,0.12); border: 1px solid rgba(200,168,75,0.3);
+    border-radius: 10px; padding: 7px 14px;
+    font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700;
+    color: var(--gold); min-width: 86px; text-align: center;
+  }
+  .timer-box.warning { color: var(--orange); border-color: rgba(224,123,57,0.5); background: rgba(224,123,57,0.1); }
+  .progress-bar-wrap { height: 3px; background: rgba(245,240,232,0.08); }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.4s ease; }
+  .task-area { flex: 1; overflow-y: auto; padding: 16px 16px 110px; display: flex; flex-direction: column; gap: 14px; }
+
+  .task-card {
+    background: rgba(245,240,232,0.04); border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 16px; overflow: hidden; transition: border-color 0.3s, background 0.3s;
+  }
+  .task-card.solved { background: rgba(45,106,79,0.15); border-color: rgba(45,106,79,0.5); }
+  .task-header { padding: 14px 16px 10px; }
+  .task-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+  .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
+  .badge-indoor { background: rgba(60,59,110,0.6); color: #a9c2ff; border: 1px solid rgba(60,59,110,0.8); }
+  .badge-outdoor { background: rgba(45,106,79,0.5); color: #7dd9a0; border: 1px solid rgba(45,106,79,0.7); }
+  .badge-phone { background: rgba(200,168,75,0.2); color: var(--gold); border: 1px solid rgba(200,168,75,0.4); }
+  .badge-photo { background: rgba(224,123,57,0.2); color: #f4a261; border: 1px solid rgba(224,123,57,0.4); }
+  .badge-bonus { background: rgba(204,0,0,0.2); color: #ff8080; border: 1px solid rgba(204,0,0,0.4); }
+  .task-num { font-family: 'Space Mono', monospace; font-size: 10px; color: rgba(245,240,232,0.3); }
+  .task-content { padding: 0 16px 16px; }
+  .task-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .task-desc { font-size: 13px; color: rgba(245,240,232,0.75); line-height: 1.65; margin-bottom: 12px; }
+  .task-hint { font-size: 12px; color: rgba(200,168,75,0.7); font-style: italic; margin-bottom: 12px; }
+  .answer-row { display: flex; gap: 8px; }
+  .answer-input {
+    flex: 1; background: rgba(245,240,232,0.06); border: 1px solid rgba(245,240,232,0.15);
+    border-radius: 10px; padding: 10px 13px; color: var(--white);
+    font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  .answer-input:focus { border-color: var(--gold); }
+  .answer-input::placeholder { color: rgba(245,240,232,0.3); }
+  .btn-check {
+    background: var(--gold); color: var(--black); border: none; border-radius: 10px;
+    padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+    transition: opacity 0.2s; white-space: nowrap;
+  }
+  .btn-check:hover { opacity: 0.88; }
+  .photo-task-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(224,123,57,0.15); border: 1px dashed rgba(224,123,57,0.5);
+    border-radius: 10px; padding: 11px 15px;
+    color: #f4a261; font-size: 13px; font-weight: 600;
+    cursor: pointer; width: 100%; text-align: left; transition: background 0.2s;
+    margin-bottom: 8px;
+  }
+  .photo-task-btn:hover { background: rgba(224,123,57,0.25); }
+  .photo-task-btn.done { background: rgba(45,106,79,0.2); border-color: rgba(45,106,79,0.5); color: #7dd9a0; }
+  .feedback { padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 8px; display: none; }
+  .feedback.correct { background: rgba(45,106,79,0.2); color: #7dd9a0; border: 1px solid rgba(45,106,79,0.4); display: block; }
+  .feedback.wrong { background: rgba(204,0,0,0.15); color: #ff8080; border: 1px solid rgba(204,0,0,0.3); display: block; }
+  .task-solved-overlay { display: none; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; color: #7dd9a0; }
+  .task-card.solved .task-solved-overlay { display: flex; }
+  .task-card.solved .answer-row, .task-card.solved .photo-task-btn, .task-card.solved .feedback { display: none; }
+
+  .rally-bottom {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(13,13,13,0.96); border-top: 1px solid rgba(245,240,232,0.1);
+    padding: 12px 18px; display: flex; gap: 12px; align-items: center;
+    backdrop-filter: blur(12px); z-index: 10;
+  }
+  .score-display { flex: 1; }
+  .score-display .label { font-size: 10px; color: rgba(245,240,232,0.4); letter-spacing: 0.1em; text-transform: uppercase; }
+  .score-display .val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: var(--gold); }
+  .btn-finish { background: rgba(204,0,0,0.8); color: #fff; border: none; border-radius: 10px; padding: 11px 20px; font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
+  .btn-finish:hover { opacity: 0.85; }
+
+  /* ── RESULTS ── */
+  #screen-results { padding: 36px 20px; align-items: center; justify-content: center; gap: 22px; text-align: center; }
+  .results-trophy { font-size: 60px; }
+  .results-title { font-family: 'Playfair Display', serif; font-size: clamp(28px,7vw,52px); font-weight: 900; }
+  .results-team { font-family: 'Space Mono', monospace; font-size: 17px; color: var(--gold); font-weight: 700; }
+  .results-stats { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .stat-box { background: rgba(245,240,232,0.05); border: 1px solid rgba(245,240,232,0.1); border-radius: 14px; padding: 16px 20px; min-width: 100px; }
+  .stat-box .val { font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700; color: var(--gold); }
+  .stat-box .lbl { font-size: 10px; color: rgba(245,240,232,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+  .leaderboard { width: 100%; max-width: 480px; background: rgba(245,240,232,0.04); border: 1px solid rgba(245,240,232,0.1); border-radius: 14px; overflow: hidden; }
+  .lb-header { padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); border-bottom: 1px solid rgba(245,240,232,0.08); background: rgba(200,168,75,0.06); }
+  .lb-row { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid rgba(245,240,232,0.06); font-size: 13px; }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-family: 'Space Mono', monospace; font-size: 12px; color: rgba(245,240,232,0.4); width: 20px; }
+  .lb-name { flex: 1; font-weight: 500; }
+  .lb-score { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--gold); }
+  .lb-time { font-size: 11px; color: rgba(245,240,232,0.4); font-family: 'Space Mono', monospace; }
+
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
+  .pulsing { animation: pulse 1.2s ease-in-out infinite; }
+  @media(max-width:480px){.team-grid{grid-template-columns:1fr}.team-select-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ WELCOME ══ -->
+<section class="screen active" id="screen-welcome">
+  <div style="align-items:center;display:flex;flex-direction:column;gap:20px;padding:32px 20px;text-align:center;flex:1;justify-content:center">
+    <div class="gapp-badge">🌐 Sponsored by GAPP – German American Partnership Program</div>
+    <div class="flags">🇩🇪 🇺🇸</div>
+    <div>
+      <div class="welcome-title">AEG <em>meets</em> PGHS</div>
+      <div class="welcome-subtitle">School Rally · Sankt Augustin ↔ Pottstown, PA</div>
+    </div>
+    <div class="school-pills">
+      <span class="pill pill-de">🇩🇪 Albert-Einstein-Gymnasium</span>
+      <span class="pill pill-us">🇺🇸 Pottsgrove High School</span>
+    </div>
+
+    <!-- RULES ACCORDION -->
+    <div class="rules-section">
+      <h3>📋 Read the Rules — tap each section to expand</h3>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">👥</span> Who plays together?</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          <ul>
+            <li>There are <strong>7 mixed teams</strong>.</li>
+            <li>Each team has <strong>1 student from PGHS</strong> (Pottsgrove High School, Pennsylvania) and <strong>1 to 3 students from AEG</strong> (Albert-Einstein-Gymnasium, Sankt Augustin).</li>
+            <li>The PGHS student is your American exchange partner — treat them as your guide to American culture during the bonus tasks!</li>
+            <li>All team members explore the school <strong>together</strong> the whole time. Nobody splits up.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">✨</span> Choosing your team name</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          Your team name must be made of <strong>exactly one English word + one German word</strong>, combined into one creative name.
+          <div class="rule-example">
+            💡 Examples: "wunderbar together" · "Abenteuer friends" · "spitze crew" · "Freunde forever" · "schön vibes"
+          </div>
+          You will enter your team name in the next screen. Both words should feel connected — be creative!
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">🕐</span> Time &amp; scoring</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          <ul>
+            <li>You have <strong>30 minutes</strong> from the moment your team starts.</li>
+            <li>Each solved task earns <strong>+10 points</strong>. Bonus tasks earn <strong>+15 points</strong>.</li>
+            <li>The team with the <strong>most points wins</strong>. If teams tie on points, the one who finished faster wins.</li>
+            <li>You can tackle tasks in any order — no fixed route!</li>
+            <li>When your 30 minutes are up the timer stops automatically and your score is saved.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">📱</span> Using your phone</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          <ul>
+            <li>Tasks marked <strong>📱 Phone OK</strong> — you are allowed and encouraged to search the web.</li>
+            <li>Tasks marked <strong>📸 Photo Required</strong> — you must take a real photo with your phone. Tap the photo button in the app to confirm you took it.</li>
+            <li>Tasks with <strong>no phone badge</strong> — no Googling! Find the answer by exploring the school.</li>
+          </ul>
+          <div class="rule-example">The teacher will check photo tasks at the end by reviewing your camera roll.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">🏠🌳</span> Indoor vs. Outdoor tasks</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          <ul>
+            <li><strong>🏠 Indoor</strong> tasks are solved inside the school building.</li>
+            <li><strong>🌳 Outdoor</strong> tasks require you to go outside onto the school grounds or front entrance area.</li>
+            <li>Stay within the school premises at all times.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">⭐</span> Bonus tasks</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          There are <strong>2 bonus tasks</strong> worth 15 points each. They are harder and more creative. One involves your PGHS partner sharing something about American culture, the other requires finding a surprising fact about Pottstown. These are optional but highly recommended for winning!
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-header" onclick="toggleRule(this)">
+          <span><span class="ico">🌐</span> About GAPP</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="rule-block-body">
+          This exchange is proudly sponsored by the <strong>German American Partnership Program (GAPP)</strong>, which has connected German and American students since 1983. GAPP supports thousands of students every year in experiencing each other's cultures firsthand. You are part of that tradition today! 🎉
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goTo('screen-setup')">Got it — Set up teams! 🚀</button>
+  </div>
+  <div class="gapp-footer"><strong>German American Partnership Program (GAPP)</strong> · Supporting German-American student exchange since 1983</div>
+</section>
+
+<!-- ══ SETUP ══ -->
+<section class="screen" id="screen-setup">
+  <div style="padding:28px 20px;display:flex;flex-direction:column;gap:20px;align-items:center;flex:1">
+    <div class="setup-header">
+      <div class="gapp-badge" style="margin-bottom:14px">✏️ Team Registration</div>
+      <h2>Register Your 7 Teams</h2>
+      <p>Enter one English word + one German word → your team name!</p>
+    </div>
+    <div style="background:rgba(200,168,75,0.08);border:1px solid rgba(200,168,75,0.2);border-radius:12px;padding:12px 16px;max-width:500px;width:100%;font-size:12px;color:rgba(245,240,232,0.7);line-height:1.6">
+      <strong style="color:var(--gold)">💡 Reminder:</strong> Each team = 1 PGHS student + 1–3 AEG students. Team names: one English word + one German word (e.g. "wunderbar together").
+      <br>German word ideas: <em>Abenteuer · Freunde · Zusammen · Wunderbar · Herzlich · Spitze · Weltreise</em>
+    </div>
+    <div class="team-grid" id="team-grid"></div>
+    <button class="btn-primary" onclick="startRally()">Start the Rally! 🏁</button>
+  </div>
+  <div class="gapp-footer"><strong>GAPP Exchange</strong> · AEG Sankt Augustin × PGHS Pottstown, Pennsylvania</div>
+</section>
+
+<!-- ══ SELECT ══ -->
+<section class="screen" id="screen-select">
+  <div style="padding:36px 20px;display:flex;flex-direction:column;gap:18px;align-items:center;flex:1;justify-content:center">
+    <div class="gapp-badge">🏃 Ready to race?</div>
+    <h2>Which team is playing now?</h2>
+    <p>Tap your team name — your 30-minute timer starts immediately!</p>
+    <div style="background:rgba(224,123,57,0.1);border:1px solid rgba(224,123,57,0.3);border-radius:10px;padding:10px 16px;font-size:12px;color:#f4a261;max-width:400px;text-align:center">
+      ⚠️ Make sure your whole team is ready before tapping! The timer starts right away.
+    </div>
+    <div class="team-select-grid" id="team-select-grid"></div>
+  </div>
+</section>
+
+<!-- ══ RALLY ══ -->
+<section class="screen" id="screen-rally">
+  <div class="rally-topbar">
+    <div class="rally-topbar-left">
+      <span class="label">Team</span>
+      <span class="team-display" id="current-team-display">—</span>
+    </div>
+    <div class="timer-box" id="timer-display">30:00</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="task-area" id="task-area"></div>
+  <div class="rally-bottom">
+    <div class="score-display">
+      <span class="label">Score</span>
+      <span class="val" id="live-score">0 pts</span>
+    </div>
+    <span id="solved-count" style="font-size:12px;color:rgba(245,240,232,0.5)">0/10</span>
+    <button class="btn-finish" onclick="finishRally()">Finish 🏁</button>
+  </div>
+</section>
+
+<!-- ══ RESULTS ══ -->
+<section class="screen" id="screen-results">
+  <div class="results-trophy">🏆</div>
+  <div class="results-title">Rally Complete!</div>
+  <div class="results-team" id="result-team-name">—</div>
+  <div class="results-stats">
+    <div class="stat-box"><div class="val" id="result-score">0</div><div class="lbl">Points</div></div>
+    <div class="stat-box"><div class="val" id="result-solved">0/10</div><div class="lbl">Solved</div></div>
+    <div class="stat-box"><div class="val" id="result-time">—</div><div class="lbl">Time Used</div></div>
+  </div>
+  <div class="leaderboard">
+    <div class="lb-header">🏅 Leaderboard — All Teams</div>
+    <div id="leaderboard-rows"></div>
+  </div>
+  <button class="btn-primary" onclick="playAgain()">Next Team 🔄</button>
+  <div class="gapp-footer"><strong>AEG × PGHS Exchange</strong> · Powered by GAPP – German American Partnership Program 🇩🇪🇺🇸</div>
+</section>
+
+</div>
+
+<script>
+// ── TASKS ──
+const TASKS = [
+  { id:1, title:"Einstein's Legacy", type:'indoor', phone:false, photo:false,
+    desc:"Find the portrait or name of Albert Einstein somewhere in the school building. What year was Albert Einstein born?",
+    hint:"💡 No phone allowed! Look near the main entrance area or school logo.",
+    points:10, check:(a)=>a.trim().replace(/\s/g,'').includes("1879") },
+  { id:2, title:"Mensa Mystery", type:'indoor', phone:false, photo:false, openAnswer:true,
+    desc:"Go to the Mensa (school cafeteria). Count the tables available for students. Then find today's main dish on the menu board. Write: number of tables / today's main dish.",
+    hint:"💡 No phone! Count carefully and check the menu display at the entrance.",
+    points:10, check:(a)=>a.trim().length>3 },
+  { id:3, title:"GAPP Research 📱", type:'indoor', phone:true, photo:false,
+    desc:"Use your phone! The GAPP program that sponsors your exchange was founded in a specific year. Search online for the founding year of GAPP (German American Partnership Program) and write it here.",
+    hint:"💡 Search 'GAPP German American Partnership Program founded' — try gapp-us.org!",
+    points:10, check:(a)=>a.trim().includes("1983") },
+  { id:4, title:"Team Photo at the Entrance 📸", type:'outdoor', phone:false, photo:true,
+    desc:"Go to the school's front entrance. Take a TEAM PHOTO with ALL team members visible in front of the school sign or building entrance. Then write your team name as a caption.",
+    hint:"💡 Ask a passer-by or teacher to take the photo so everyone is in it!",
+    points:10, photoOnly:true, check:(a)=>a==='photo_done' },
+  { id:5, title:"Street Explorer", type:'outdoor', phone:false, photo:false, openAnswer:true,
+    desc:"The school address is Alte Marktstraße 7. WITHOUT using your phone: go to the front entrance and write down the name of the nearest visible cross-street, nearby building, or landmark you can see from outside.",
+    hint:"💡 Just walk out and look around! Write what you observe.",
+    points:10, check:(a)=>a.trim().length>2 },
+  { id:6, title:"Bilingual School 📱", type:'indoor', phone:true, photo:false,
+    desc:"AEG is a certified bilingual school. Use your phone and visit albert-einstein-gymnasium.de — find the section about the bilingual program. What are the two languages of instruction?",
+    hint:"💡 Look for 'Bilingualer Bildungsgang' on the AEG website.",
+    points:10, check:(a)=>{const l=a.toLowerCase();return(l.includes("german")||l.includes("deutsch"))&&(l.includes("english")||l.includes("englisch"))} },
+  { id:7, title:"Secret Number Hunt", type:'indoor', phone:false, photo:false,
+    desc:"Find the main school telephone number displayed somewhere inside the building — check the secretary's office, notice boards, or the entrance area. Write the full number.",
+    hint:"💡 The number starts with 02241. No phone allowed — find it physically!",
+    points:10, check:(a)=>a.replace(/[\s\-\/\+()]/g,'').includes("024413993")||a.replace(/[\s\-\/\+()]/g,'').includes("22413993") },
+  { id:8, title:"Cultural Snapshot 📸", type:'outdoor', phone:false, photo:true, openAnswer:true,
+    desc:"Go to the school grounds. Find anything that represents BOTH Germany AND America at the same time — a flag, poster, exchange programme display, student artwork, anything! Take a photo AND write one sentence describing what you found.",
+    hint:"💡 Think creatively — it could be an exchange bulletin board, bilingual sign, flag, or student project.",
+    points:10, check:(a)=>a.trim().length>5 },
+  { id:9, title:"⭐ BONUS — Pottstown Fact 📱", type:'indoor', phone:true, photo:false, bonus:true,
+    desc:"BONUS (+15 pts)! Use your phone to find ONE surprising or interesting fact about Pottstown, Pennsylvania that your PGHS teammate did NOT already know. Write the fact here, then ask your PGHS partner to confirm: 'Did you know this?' They must say NO for full points!",
+    hint:"💡 Search 'Pottstown Pennsylvania interesting facts history'. Your PGHS partner is the judge!",
+    points:15, openAnswer:true, check:(a)=>a.trim().length>10 },
+  { id:10, title:"⭐ BONUS — German School Surprise", type:'indoor', phone:false, photo:false, bonus:true,
+    desc:"BONUS (+15 pts)! Ask your PGHS exchange partner: 'What is ONE thing about German school life that surprised you today?' Write their answer in their own words here. It must be a real observation from today's visit at AEG!",
+    hint:"💡 This task is from your American partner's perspective — let them speak and write what they say!",
+    points:15, openAnswer:true, check:(a)=>a.trim().length>8 }
+];
+
+const TOTAL_TIME = 30*60;
+let teams=[], currentTeamIdx=null, timerInterval=null;
+let secondsLeft=TOTAL_TIME, secondsUsed=0;
+let taskStates={}, leaderboard=[];
+
+// ── ACCORDION ──
+function toggleRule(header){
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// ── SETUP ──
+function initSetupGrid(){
+  const grid=document.getElementById('team-grid');
+  grid.innerHTML='';
+  for(let i=1;i<=7;i++){
+    const c=document.createElement('div');
+    c.className='team-card';
+    c.innerHTML=`
+      <div class="team-card-header"><div class="team-num">${i}</div>Team ${i}</div>
+      <div class="team-input-hint">🇺🇸 English word + 🇩🇪 German word</div>
+      <div class="team-input-row">
+        <input type="text" id="eng-${i}" placeholder="e.g. together" oninput="updatePreview(${i})">
+        <span class="plus-sign">+</span>
+        <input type="text" id="de-${i}" placeholder="e.g. wunderbar" oninput="updatePreview(${i})">
+      </div>
+      <div class="team-name-preview" id="preview-${i}">→ your team name appears here</div>
+    `;
+    grid.appendChild(c);
+  }
+}
+
+function updatePreview(i){
+  const eng=document.getElementById(`eng-${i}`).value.trim();
+  const de=document.getElementById(`de-${i}`).value.trim();
+  const prev=document.getElementById(`preview-${i}`);
+  prev.textContent=(eng||de)?`→ "${de||'...'} ${eng||'...'}"` : '→ your team name appears here';
+}
+
+function startRally(){
+  teams=[];
+  for(let i=1;i<=7;i++){
+    const eng=document.getElementById(`eng-${i}`)?.value.trim();
+    const de=document.getElementById(`de-${i}`)?.value.trim();
+    if(eng||de) teams.push({num:i,eng:eng||'...',de:de||'...'});
+  }
+  if(teams.length<1){alert("Please enter at least one team name!");return;}
+  buildTeamSelectScreen();
+  goTo('screen-select');
+}
+
+function buildTeamSelectScreen(){
+  const grid=document.getElementById('team-select-grid');
+  grid.innerHTML='';
+  teams.forEach((t,idx)=>{
+    const btn=document.createElement('button');
+    btn.className='team-select-btn';
+    const done=leaderboard.find(lb=>lb.teamIdx===idx);
+    btn.innerHTML=`<div>${t.de} ${t.eng}</div><div class="tn">Team ${t.num}${done?' ✅':''}</div>`;
+    if(!done) btn.onclick=()=>beginTeamRally(idx);
+    else{btn.style.opacity='0.5';btn.style.cursor='default';}
+    grid.appendChild(btn);
+  });
+}
+
+function beginTeamRally(idx){
+  currentTeamIdx=idx; taskStates={}; secondsLeft=TOTAL_TIME; secondsUsed=0;
+  TASKS.forEach(t=>{taskStates[t.id]={solved:false,answer:'',photoMarked:false};});
+  buildTaskArea(); updateTopBar(); goTo('screen-rally'); startTimer();
+}
+
+// ── TASKS ──
+function buildTaskArea(){
+  const area=document.getElementById('task-area');
+  area.innerHTML='';
+  TASKS.forEach(t=>{
+    const card=document.createElement('div');
+    card.className='task-card'; card.id=`task-card-${t.id}`;
+    const badges=[
+      t.type==='indoor'?'<span class="badge badge-indoor">🏠 Indoor</span>':'<span class="badge badge-outdoor">🌳 Outdoor</span>',
+      t.phone?'<span class="badge badge-phone">📱 Phone OK</span>':'',
+      t.photo?'<span class="badge badge-photo">📸 Photo Required</span>':'',
+      t.bonus?'<span class="badge badge-bonus">⭐ Bonus +15</span>':''
+    ].join('');
+
+    let answerHTML='';
+    if(t.photoOnly){
+      answerHTML=`<button class="photo-task-btn" id="photo-btn-${t.id}" onclick="markPhotoDone(${t.id})">📸 Tap here when photo is taken!</button>`;
+    } else if(t.photo&&t.openAnswer){
+      answerHTML=`
+        <button class="photo-task-btn" id="photo-btn-${t.id}" onclick="markPhotoDone(${t.id})">📸 Tap here when photo is taken!</button>
+        <div class="answer-row">
+          <input class="answer-input" id="ans-${t.id}" placeholder="Write your one-sentence description..." maxlength="200">
+          <button class="btn-check" onclick="checkAnswer(${t.id})">Submit</button>
+        </div>`;
+    } else {
+      answerHTML=`<div class="answer-row">
+        <input class="answer-input" id="ans-${t.id}" placeholder="${t.openAnswer?'Write your answer here...':'Type the answer...'}" maxlength="200" onkeydown="if(event.key==='Enter')checkAnswer(${t.id})">
+        <button class="btn-check" onclick="checkAnswer(${t.id})">Submit</button>
+      </div>`;
+    }
+
+    card.innerHTML=`
+      <div class="task-header"><div class="task-badges">${badges}</div><div class="task-num">TASK ${t.id} of ${TASKS.length} · ${t.points} pts</div></div>
+      <div class="task-content">
+        <div class="task-title">${t.title}</div>
+        <div class="task-desc">${t.desc}</div>
+        <div class="task-hint">${t.hint}</div>
+        ${answerHTML}
+        <div class="feedback" id="fb-${t.id}"></div>
+      </div>
+      <div class="task-solved-overlay">✅ Solved! +${t.points} points earned</div>
+    `;
+    area.appendChild(card);
+  });
+  updateScoreDisplay();
+}
+
+function markPhotoDone(id){
+  taskStates[id].photoMarked=true;
+  const btn=document.getElementById(`photo-btn-${id}`);
+  btn.classList.add('done'); btn.textContent='✅ Photo marked as taken!';
+  const task=TASKS.find(t=>t.id===id);
+  if(task.photoOnly) solveTask(id,task.points);
+}
+
+function checkAnswer(id){
+  const task=TASKS.find(t=>t.id===id);
+  const input=document.getElementById(`ans-${id}`);
+  const fb=document.getElementById(`fb-${id}`);
+  const val=input?.value||'';
+  if(task.photo&&!taskStates[id].photoMarked){
+    fb.className='feedback wrong'; fb.textContent='📸 Please tap the photo button first!'; return;
+  }
+  const correct=task.openAnswer? val.trim().length>3 : task.check(val);
+  if(correct){ solveTask(id,task.points,val); }
+  else{ fb.className='feedback wrong'; fb.textContent='❌ Not quite — keep exploring and try again!'; }
+}
+
+function solveTask(id,points,val=''){
+  if(taskStates[id].solved) return;
+  taskStates[id].solved=true; taskStates[id].answer=val;
+  document.getElementById(`task-card-${id}`).classList.add('solved');
+  updateScoreDisplay(); updateProgressBar();
+  if(getSolvedCount()===TASKS.length) setTimeout(finishRally,600);
+}
+
+// ── TIMER ──
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    secondsLeft--; secondsUsed++;
+    updateTimerDisplay();
+    if(secondsLeft<=0){clearInterval(timerInterval);finishRally();}
+  },1000);
+}
+function updateTimerDisplay(){
+  const m=Math.floor(secondsLeft/60).toString().padStart(2,'0');
+  const s=(secondsLeft%60).toString().padStart(2,'0');
+  const el=document.getElementById('timer-display');
+  el.textContent=`${m}:${s}`;
+  el.className='timer-box'+(secondsLeft<300?' warning pulsing':'');
+}
+
+// ── UI ──
+function updateTopBar(){ const t=teams[currentTeamIdx]; document.getElementById('current-team-display').textContent=`${t.de} ${t.eng}`; }
+function getScore(){ return TASKS.filter(t=>taskStates[t.id]?.solved).reduce((s,t)=>s+t.points,0); }
+function getSolvedCount(){ return TASKS.filter(t=>taskStates[t.id]?.solved).length; }
+function updateScoreDisplay(){
+  document.getElementById('live-score').textContent=`${getScore()} pts`;
+  document.getElementById('solved-count').textContent=`${getSolvedCount()}/${TASKS.length}`;
+}
+function updateProgressBar(){ document.getElementById('progress-fill').style.width=(getSolvedCount()/TASKS.length*100)+'%'; }
+
+// ── FINISH ──
+function finishRally(){
+  clearInterval(timerInterval);
+  const team=teams[currentTeamIdx], score=getScore(), solved=getSolvedCount(), used=secondsUsed;
+  leaderboard.push({teamIdx:currentTeamIdx,name:`${team.de} ${team.eng}`,score,solved,timeUsed:used});
+  leaderboard.sort((a,b)=>b.score-a.score||a.timeUsed-b.timeUsed);
+  document.getElementById('result-team-name').textContent=`${team.de} ${team.eng}`;
+  document.getElementById('result-score').textContent=score;
+  document.getElementById('result-solved').textContent=`${solved}/${TASKS.length}`;
+  const mu=Math.floor(used/60).toString().padStart(2,'0'), su=(used%60).toString().padStart(2,'0');
+  document.getElementById('result-time').textContent=`${mu}:${su}`;
+  buildLeaderboard(); goTo('screen-results');
+}
+function buildLeaderboard(){
+  const c=document.getElementById('leaderboard-rows'); c.innerHTML='';
+  const medals=['🥇','🥈','🥉'];
+  leaderboard.forEach((e,i)=>{
+    const mu=Math.floor(e.timeUsed/60).toString().padStart(2,'0'), su=(e.timeUsed%60).toString().padStart(2,'0');
+    const row=document.createElement('div'); row.className='lb-row';
+    row.innerHTML=`<span class="lb-rank">${medals[i]||(i+1)+'.'}</span><span class="lb-name">${e.name}</span><span class="lb-score">${e.score}pt</span><span class="lb-time">${mu}:${su}</span>`;
+    c.appendChild(row);
+  });
+}
+function playAgain(){ buildTeamSelectScreen(); goTo('screen-select'); }
+
+// ── NAV ──
+function goTo(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+
+initSetupGrid();
+</script>
+</body>
+</html>
